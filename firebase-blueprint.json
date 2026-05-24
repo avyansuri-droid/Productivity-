@@ -1,0 +1,153 @@
+{
+  "entities": {
+    "Task": {
+      "title": "Task",
+      "description": "A productivity task.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Owner ID"
+        },
+        "title": {
+          "type": "string",
+          "description": "Task Title"
+        },
+        "category": {
+          "type": "string",
+          "description": "Task Category (e.g. Work, Personal)"
+        },
+        "time": {
+          "type": "string",
+          "description": "Time string"
+        },
+        "priority": {
+          "type": "boolean",
+          "description": "Is it important?"
+        },
+        "completed": {
+          "type": "boolean",
+          "description": "Is it completed?"
+        },
+        "createdAt": {
+          "type": "timestamp"
+        },
+        "updatedAt": {
+          "type": "timestamp"
+        }
+      },
+      "required": ["userId", "title", "createdAt", "updatedAt"]
+    },
+    "Event": {
+      "title": "Event",
+      "description": "Calendar event.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Owner ID"
+        },
+        "date": {
+          "type": "string"
+        },
+        "time": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "priority": {
+          "type": "boolean"
+        },
+        "createdAt": {
+          "type": "timestamp"
+        },
+        "updatedAt": {
+          "type": "timestamp"
+        }
+      },
+      "required": ["userId", "date", "title", "createdAt"]
+    },
+    "Transcription": {
+      "title": "Transcription",
+      "description": "Voice-to-text transcript.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string"
+        },
+        "tag": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "preview": {
+          "type": "string"
+        },
+        "date": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "timestamp"
+        },
+        "updatedAt": {
+          "type": "timestamp"
+        }
+      },
+      "required": ["userId", "title", "createdAt"]
+    },
+    "Template": {
+      "title": "Template",
+      "description": "User created templates.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "isCustom": {
+          "type": "boolean"
+        },
+        "createdAt": {
+          "type": "timestamp"
+        },
+        "updatedAt": {
+          "type": "timestamp"
+        }
+      },
+      "required": ["userId", "name", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/tasks/{taskId}": {
+      "schema": {
+        "$ref": "#/entities/Task"
+      },
+      "description": "User tasks."
+    },
+    "/users/{userId}/events/{eventId}": {
+      "schema": {
+        "$ref": "#/entities/Event"
+      },
+      "description": "User events."
+    },
+    "/users/{userId}/transcriptions/{transcriptionId}": {
+      "schema": {
+        "$ref": "#/entities/Transcription"
+      },
+      "description": "User transcriptions."
+    },
+    "/users/{userId}/templates/{templateId}": {
+      "schema": {
+        "$ref": "#/entities/Template"
+      },
+      "description": "User templates."
+    }
+  }
+}

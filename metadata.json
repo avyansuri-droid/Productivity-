@@ -1,0 +1,8 @@
+{
+  "name": "Productivity Pro",
+  "description": "A production-ready productivity web app featuring a Dashboard, Calendar, Tasks, Templates, AI Transcriber, and Nova AI Receptionist.",
+  "requestFramePermissions": [
+    "microphone"
+  ],
+  "majorCapabilities": []
+}

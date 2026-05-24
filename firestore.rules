@@ -1,0 +1,141 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Primitive Definition
+    function isValidId(id) { 
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); 
+    }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    function isSignedIn() { return request.auth != null; }
+    function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
+
+    function isValidTask(data, userId) {
+      return data.userId == userId 
+        && data.title is string && data.title.size() <= 200
+        && (!('category' in data) || (data.category is string && data.category.size() <= 100))
+        && (!('time' in data) || (data.time is string && data.time.size() <= 50))
+        && (!('priority' in data) || data.priority is bool)
+        && (!('completed' in data) || data.completed is bool)
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidEvent(data, userId) {
+      return data.userId == userId 
+        && data.date is string && data.date.size() <= 50
+        && (!('time' in data) || (data.time is string && data.time.size() <= 50))
+        && data.title is string && data.title.size() <= 200
+        && (!('priority' in data) || data.priority is bool)
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidTranscription(data, userId) {
+      return data.userId == userId 
+        && (!('tag' in data) || (data.tag is string && data.tag.size() <= 100))
+        && data.title is string && data.title.size() <= 200
+        && (!('preview' in data) || (data.preview is string && data.preview.size() <= 100000))
+        && (!('date' in data) || (data.date is string && data.date.size() <= 50))
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidTemplate(data, userId) {
+      return data.userId == userId 
+        && data.name is string && data.name.size() <= 200
+        && (!('description' in data) || (data.description is string && data.description.size() <= 1000))
+        && (!('isCustom' in data) || data.isCustom is bool)
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    match /users/{userId} {
+      match /tasks/{taskId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId) && existing().userId == userId;
+        allow create: if isOwner(userId)
+          && isValidId(taskId)
+          && isValidTask(incoming(), userId)
+          && incoming().keys().hasAll(['userId', 'title', 'createdAt', 'updatedAt'])
+          && incoming().keys().size() <= 8
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time;
+        allow update: if isOwner(userId)
+          && isValidId(taskId)
+          && isValidTask(incoming(), userId)
+          && incoming().userId == existing().userId
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly(['title', 'category', 'time', 'priority', 'completed', 'updatedAt']);
+        allow delete: if isOwner(userId);
+      }
+
+      match /events/{eventId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId) && existing().userId == userId;
+        allow create: if isOwner(userId)
+          && isValidId(eventId)
+          && isValidEvent(incoming(), userId)
+          && incoming().keys().hasAll(['userId', 'date', 'title', 'createdAt', 'updatedAt'])
+          && incoming().keys().size() <= 7
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time;
+        allow update: if isOwner(userId)
+          && isValidId(eventId)
+          && isValidEvent(incoming(), userId)
+          && incoming().userId == existing().userId
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly(['date', 'time', 'title', 'priority', 'updatedAt']);
+        allow delete: if isOwner(userId);
+      }
+
+      match /transcriptions/{transcriptionId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId) && existing().userId == userId;
+        allow create: if isOwner(userId)
+          && isValidId(transcriptionId)
+          && isValidTranscription(incoming(), userId)
+          && incoming().keys().hasAll(['userId', 'title', 'createdAt', 'updatedAt'])
+          && incoming().keys().size() <= 7
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time;
+        allow update: if isOwner(userId)
+          && isValidId(transcriptionId)
+          && isValidTranscription(incoming(), userId)
+          && incoming().userId == existing().userId
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly(['tag', 'title', 'preview', 'date', 'updatedAt']);
+        allow delete: if isOwner(userId);
+      }
+
+      match /templates/{templateId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId) && existing().userId == userId;
+        allow create: if isOwner(userId)
+          && isValidId(templateId)
+          && isValidTemplate(incoming(), userId)
+          && incoming().keys().hasAll(['userId', 'name', 'createdAt', 'updatedAt'])
+          && incoming().keys().size() <= 6
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time;
+        allow update: if isOwner(userId)
+          && isValidId(templateId)
+          && isValidTemplate(incoming(), userId)
+          && incoming().userId == existing().userId
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly(['name', 'description', 'isCustom', 'updatedAt']);
+        allow delete: if isOwner(userId);
+      }
+    }
+  }
+}
